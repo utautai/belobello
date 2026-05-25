@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Belobello</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f3ec;
+  --paper: #fffdf8;
+  --ink: #1e1a14;
+  --ink2: #5a5040;
+  --ink3: #9a8c78;
+  --accent: #2e6b4f;
+  --accent-soft: #e0ede7;
+  --amber: #c47c1a;
+  --amber-soft: #fdf0d8;
+  --red: #b83c2a;
+  --highlight: #ffe58a;
+  --highlight2: #ffd040;
+  --word-hover: #e8f4ee;
+  --shadow: rgba(30,26,20,0.10);
+  --radius: 12px;
+  --font-body: 'Fraunces', Georgia, serif;
+  --font-ui: 'DM Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: var(--font-ui);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 0 18px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 14px var(--shadow);
+}
+
+.logo {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--bg);
+}
+.logo span { color: #7ecba0; }
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.speed-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.speed-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+.speed-select {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--bg);
+  border-radius: 7px;
+  padding: 4px 9px;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-stop {
+  background: var(--red);
+  border: none;
+  color: white;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+.btn-stop.on { display: flex; }
+.btn-stop:active { opacity: 0.8; }
+
+/* ── LEGEND BAR ── */
+.legend {
+  background: var(--paper);
+  border-bottom: 1px solid #e4ddd2;
+  padding: 8px 18px;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 0.73rem;
+  color: var(--ink2);
+  font-weight: 500;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.ld-word { background: #c8e6d4; border: 1.5px solid #7ecba0; }
+.ld-sent { background: #2e6b4f; }
+.ld-para { background: var(--amber); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  background: var(--paper);
+  border-bottom: 2px solid #e4ddd2;
+  padding: 0 16px;
+  gap: 2px;
+}
+.tab {
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── MAIN ── */
+main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 20px 14px 80px;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── CHAPTER ── */
+.chapter {
+  background: var(--paper);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 12px var(--shadow);
+  margin-bottom: 20px;
+  overflow: hidden;
+  border: 1px solid #e4ddd2;
+}
+
+.chapter-head {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.chapter-head:active { background: #3a3020; }
+
+.ch-badge {
+  background: var(--accent);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+.ch-title {
+  font-family: var(--font-body);
+  font-size: 0.97rem;
+  font-weight: 300;
+  flex: 1;
+}
+.ch-arrow {
+  font-size: 0.75rem;
+  opacity: 0.4;
+  transition: transform 0.25s;
+}
+.chapter.open .ch-arrow { transform: rotate(180deg); }
+
+.chapter-body {
+  display: none;
+  padding: 16px;
+}
+.chapter.open .chapter-body { display: block; }
+
+.btn-read-all {
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.02em;
+}
+.btn-read-all:active { opacity: 0.85; }
+
+/* ── PARAGRAPH BLOCK ── */
+.para-block {
+  margin-bottom: 10px;
+  padding: 10px 10px 10px 38px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: var(--font-body);
+  font-size: 1.03rem;
+  line-height: 1.9;
+  cursor: default;
+}
+.para-block:hover { border-color: #ddd5c8; background: #faf7f2; }
+.para-block.speaking-para {
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
+/* paragraph play button (left gutter) */
+.para-play {
+  position: absolute;
+  left: 7px;
+  top: 12px;
+  width: 22px;
+  height: 22px;
+  background: var(--amber);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 1px;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  z-index: 2;
+}
+.para-play:active { transform: scale(0.92); background: #a36510; }
+
+/* ── SENTENCE ── */
+.sent {
+  display: inline;
+}
+.sent-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.5rem;
+  cursor: pointer;
+  margin-right: 3px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  flex-shrink: 0;
+  padding-left: 1px;
+  transition: background 0.15s, transform 0.1s;
+}
+.sent-play:active { transform: scale(0.9); }
+.sent-play.speaking-sent { background: var(--red); }
+
+.sent-text { display: inline; }
+.sent-text.speaking-sent-text {
+  background: var(--highlight);
+  border-radius: 3px;
+}
+
+/* ── WORD ── */
+.word {
+  display: inline;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 1px;
+  transition: background 0.12s;
+  position: relative;
+}
+.word:hover { background: var(--word-hover); }
+.word.speaking-word {
+  background: var(--highlight);
+}
+
+/* read count badge on word */
+.word[data-count]:not([data-count="0"])::after {
+  content: attr(data-count);
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.5rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 0 3px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+/* ── TOOLTIP ── */
+.tooltip {
+  position: fixed;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 0.78rem;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+  max-width: 200px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  line-height: 1.5;
+}
+.tooltip .t-word {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #7ecba0;
+  display: block;
+}
+.tooltip .t-mean { display: block; }
+.tooltip .t-count {
+  display: block;
+  font-size: 0.68rem;
+  opacity: 0.55;
+  margin-top: 2px;
+}
+
+/* ── SECTION DIVIDER ── */
+.sec-divider {
+  border: none;
+  border-top: 1px dashed #d8cfc4;
+  margin: 14px 0;
+}
+.sec-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink3);
+  margin-bottom: 8px;
+}
+
+/* ── STATS PANEL ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--paper);
+  border-radius: var(--radius);
+  border: 1px solid #e4ddd2;
+  padding: 14px 12px;
+  text-align: center;
+}
+.stat-num {
+  font-family: var(--font-body);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.68rem;
+  color: var(--ink3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.top-words {
+  background: var(--paper);
+  border-radius: var(--radius);
+  border: 1px solid #e4ddd2;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.top-words-head {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.top-words-list {
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.top-word-chip {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.top-word-chip .twc-count {
+  background: var(--accent);
+  color: white;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 0.65rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+}
+
+.btn-clear-stats {
+  background: none;
+  border: 1.5px solid #d8cfc4;
+  color: var(--ink3);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-clear-stats:active { background: #f0ebe3; }
+
+/* ── ADD TEXT PANEL ── */
+.add-section {
+  background: var(--paper);
+  border-radius: var(--radius);
+  border: 1px solid #e4ddd2;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 12px var(--shadow);
+}
+.add-head {
+  background: #4a6741;
+  color: white;
+  padding: 11px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.add-body { padding: 14px; }
+
+input.field, textarea.field {
+  width: 100%;
+  border: 1.5px solid #d8cfc4;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 0.93rem;
+  line-height: 1.65;
+  color: var(--ink);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.18s;
+  margin-bottom: 8px;
+  display: block;
+}
+input.field { font-family: var(--font-ui); font-size: 0.88rem; }
+input.field:focus, textarea.field:focus { border-color: var(--accent); }
+textarea.field { min-height: 120px; resize: vertical; }
+
+.btn-add {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-add:active { opacity: 0.85; }
+
+#addStatus {
+  font-size: 0.75rem;
+  color: var(--ink2);
+  margin-top: 8px;
+  font-weight: 600;
+  min-height: 16px;
+}
+
+/* ── JAPANESE TRANSLATION ── */
+.ja-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+  background: none;
+  border: 1.5px solid #c8d8cf;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+.ja-toggle:active { background: var(--accent-soft); }
+.ja-toggle.open { background: var(--accent-soft); }
+
+.ja-body {
+  display: none;
+  margin-top: 7px;
+  padding: 9px 12px;
+  background: #f0f7f4;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: var(--ink2);
+}
+.ja-body.open { display: block; }
+
+/* ── READING HEAT ── */
+.para-block[data-reads="1"] { border-left: 3px solid #a8d5bc; }
+.para-block[data-reads="2"] { border-left: 3px solid #5aab80; }
+.para-block[data-reads="3"] { border-left: 3px solid #2e8a56; }
+.para-block[data-reads="4"] { border-left: 3px solid #1d6640; }
+.para-block[data-reads="5"] { border-left: 3px solid #0f4028; }
+
+/* ── PAGE LAYOUT ── */
+.page-wrap {
+  display: flex;
+  align-items: flex-start;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── SIDEBAR (PC) ── */
+.sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 54px; /* header height */
+  max-height: calc(100vh - 54px);
+  overflow-y: auto;
+  padding: 16px 0 40px;
+  border-right: 1px solid #e4ddd2;
+  background: var(--paper);
+}
+
+.sidebar-head {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink3);
+  padding: 0 14px 8px;
+  border-bottom: 1px solid #e4ddd2;
+  margin-bottom: 6px;
+}
+
+.toc-item {
+  display: block;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-family: var(--font-ui);
+  color: var(--ink2);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  line-height: 1.35;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  text-decoration: none;
+}
+.toc-item:hover { background: var(--accent-soft); color: var(--accent); }
+.toc-item.active {
+  border-left-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+.toc-item .toc-badge {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink3);
+  margin-bottom: 1px;
+}
+.toc-item.active .toc-badge { color: var(--accent); }
+
+/* ── MOBILE TOC (iPad / narrow) ── */
+.toc-mobile {
+  display: none;
+  background: var(--paper);
+  border-bottom: 1px solid #e4ddd2;
+}
+.toc-mobile-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 9px 16px;
+  text-align: left;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.toc-mobile-toggle:active { background: var(--accent-soft); }
+.toc-mobile-list {
+  display: none;
+  padding: 4px 0 8px;
+  border-top: 1px solid #e4ddd2;
+}
+.toc-mobile-list.open { display: block; }
+.toc-mobile-list .toc-item { border-left: none; padding: 8px 20px; }
+.toc-mobile-list .toc-item.active {
+  border-left: none;
+  background: var(--accent-soft);
+}
+
+/* ── CONTENT AREA ── */
+.content-area {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 16px 80px;
+}
+
+/* responsive: hide sidebar, show mobile toc */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .toc-mobile { display: block; }
+  .content-area { padding: 14px 10px 60px; }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">belo<span>bello</span></div>
+  <div class="header-controls">
+    <div class="speed-wrap">
+      <span class="speed-label">Speed</span>
+      <select class="speed-select" id="speedSelect">
+        <option value="0.65">Slow</option>
+        <option value="0.85" selected>Normal</option>
+        <option value="1.05">Fast</option>
+        <option value="1.25">Faster</option>
+      </select>
+    </div>
+    <button class="btn-stop" id="btnStop">⏹ Stop</button>
+  </div>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot ld-word"></span> word tap → read word</div>
+  <div class="legend-item"><span class="legend-dot ld-sent"></span> ● → read sentence</div>
+  <div class="legend-item"><span class="legend-dot ld-para"></span> ▶ → read paragraph</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('read')">📖 Read</div>
+  <div class="tab" onclick="switchTab('stats')">📊 Stats</div>
+  <div class="tab" onclick="switchTab('add')">＋ Add Text</div>
+</div>
+
+<!-- MOBILE TOC -->
+<div class="toc-mobile" id="tocMobile">
+  <button class="toc-mobile-toggle" onclick="toggleMobileToc()">
+    <span id="tocMobileLabel">📋 目次</span>
+    <span id="tocMobileArrow">▼</span>
+  </button>
+  <div class="toc-mobile-list" id="tocMobileList"></div>
+</div>
+
+<div class="page-wrap">
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-head">目次</div>
+  <div id="tocList"></div>
+</nav>
+
+<!-- CONTENT -->
+<div class="content-area">
+<main>
+
+<!-- READ TAB -->
+<div class="tab-panel active" id="tab-read">
+  <div class="chapter open" id="ch-sample">
+    <div class="chapter-head" onclick="toggleChapter('ch-sample')">
+      <span class="ch-badge">Chapter 1</span>
+      <span class="ch-title">Our Solar System</span>
+      <span class="ch-arrow">▼</span>
+    </div>
+    <div class="chapter-body">
+      <button class="btn-read-all" onclick="readAllChapter('ch-sample')">▶ Read Whole Chapter</button>
+      <div class="sec-label">Section 1</div>
+      <div class="para-block" data-reads="0">
+        <button class="para-play" title="Read paragraph" onclick="readPara(this.parentElement)">▶</button>
+        <span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">The solar system is made up of the Sun and everything that travels around it.</span> </span><span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">This includes eight planets, dozens of moons, and millions of smaller objects such as asteroids and comets.</span></span>
+        <div><button class="ja-toggle" onclick="toggleJa(this)">🇯🇵 訳を見る</button><div class="ja-body">太陽系は、太陽とその周りを回るすべてのものから成り立っています。これには8つの惑星、数十の衛星、そして小惑星や彗星などの数百万の小さな天体が含まれます。</div></div>
+      </div>
+      <div class="para-block" data-reads="0">
+        <button class="para-play" title="Read paragraph" onclick="readPara(this.parentElement)">▶</button>
+        <span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">The Sun is at the center of our solar system.</span> </span><span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">It is a giant star made mostly of hydrogen and helium gas.</span> </span><span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">The Sun's gravity holds all the planets in their orbits.</span></span>
+        <div><button class="ja-toggle" onclick="toggleJa(this)">🇯🇵 訳を見る</button><div class="ja-body">太陽は太陽系の中心にあります。太陽は主に水素とヘリウムガスでできた巨大な恒星です。太陽の重力がすべての惑星をその軌道上に保っています。</div></div>
+      </div>
+      <hr class="sec-divider">
+      <div class="sec-label">Section 2</div>
+      <div class="para-block" data-reads="0">
+        <button class="para-play" title="Read paragraph" onclick="readPara(this.parentElement)">▶</button>
+        <span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">The four planets closest to the Sun — Mercury, Venus, Earth, and Mars — are called the inner planets.</span> </span><span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">They are made of rock and metal.</span> </span><span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">Earth is the only planet known to support life.</span></span>
+        <div><button class="ja-toggle" onclick="toggleJa(this)">🇯🇵 訳を見る</button><div class="ja-body">太陽に最も近い4つの惑星—水星、金星、地球、火星—は内惑星と呼ばれます。それらは岩石と金属でできています。地球は生命を支えることができると知られている唯一の惑星です。</div></div>
+      </div>
+      <div class="para-block" data-reads="0">
+        <button class="para-play" title="Read paragraph" onclick="readPara(this.parentElement)">▶</button>
+        <span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">Beyond the inner planets lie the outer planets: Jupiter, Saturn, Uranus, and Neptune.</span> </span><span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">These are much larger and are made mostly of gas and ice.</span> </span><span class="sent"><button class="sent-play" title="Read sentence">●</button><span class="sent-text">Saturn is famous for its beautiful rings.</span></span>
+        <div><button class="ja-toggle" onclick="toggleJa(this)">🇯🇵 訳を見る</button><div class="ja-body">内惑星の向こうには外惑星があります：木星、土星、天王星、海王星です。これらははるかに大きく、主にガスと氷でできています。土星はその美しい環で有名です。</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS TAB -->
+<div class="tab-panel" id="tab-stats">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="statWords">0</div>
+      <div class="stat-label">Words Read</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statSents">0</div>
+      <div class="stat-label">Sentences</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statParas">0</div>
+      <div class="stat-label">Paragraphs</div>
+    </div>
+  </div>
+  <div class="top-words">
+    <div class="top-words-head">🔥 Most-Practiced Words</div>
+    <div class="top-words-list" id="topWordsList"><span style="color:var(--ink3);font-size:0.8rem">Tap words to start building your list!</span></div>
+  </div>
+  <button class="btn-clear-stats" onclick="clearStats()">🗑 Reset all stats</button>
+</div>
+
+<!-- ADD TAB -->
+<div class="tab-panel" id="tab-add">
+  <div class="add-section">
+    <div class="add-head">✏️ Add Your Own Text</div>
+    <div class="add-body">
+      <input type="text" class="field" id="newTitle" placeholder="Title (e.g. Unit 3: Daily Life)">
+      <label style="font-size:0.78rem;font-weight:700;color:var(--ink2);display:block;margin-bottom:4px;">🇺🇸 English text</label>
+      <textarea class="field" id="newText" placeholder="Paste English text here. Blank lines = paragraph breaks."></textarea>
+      <label style="font-size:0.78rem;font-weight:700;color:var(--ink2);display:block;margin-bottom:4px;margin-top:4px;">🇯🇵 Japanese translation <span style="font-weight:400;opacity:0.6">（任意・段落ごとに空行で区切る）</span></label>
+      <textarea class="field" id="newJa" placeholder="日本語訳をここに貼り付け。英文と同じ数の段落に分けてください。"></textarea>
+      <button class="btn-add" onclick="addChapter()">＋ Add Chapter</button>
+      <div id="addStatus"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- .content-area -->
+</div><!-- .page-wrap -->
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip">
+  <span class="t-word" id="ttWord"></span>
+  <span class="t-mean" id="ttMean"></span>
+  <span class="t-count" id="ttCount"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// MINI DICTIONARY (top ~300 EIKEN prep2 words)
+// ═══════════════════════════════════════
+const DICT = {
+  "the":"（冠詞）その","a":"（冠詞）ひとつの","an":"（冠詞）ひとつの",
+  "is":"〜である","are":"〜である","was":"〜だった","were":"〜だった",
+  "be":"〜である","been":"〜だった","being":"〜であること",
+  "have":"持っている","has":"持っている","had":"持っていた",
+  "do":"する","does":"する","did":"した","done":"した",
+  "will":"〜するだろう","would":"〜するだろう","can":"〜できる","could":"〜できた",
+  "may":"〜かもしれない","might":"〜かもしれない","should":"〜すべき","must":"〜しなければならない",
+  "i":"私","you":"あなた","he":"彼","she":"彼女","it":"それ","we":"私たち","they":"彼ら",
+  "my":"私の","your":"あなたの","his":"彼の","her":"彼女の","its":"その","our":"私たちの","their":"彼らの",
+  "this":"これ","that":"あれ","these":"これら","those":"それら",
+  "in":"〜の中に","on":"〜の上に","at":"〜で","to":"〜へ","for":"〜のために",
+  "of":"〜の","from":"〜から","with":"〜と一緒に","by":"〜によって","about":"〜について",
+  "up":"上へ","out":"外へ","into":"〜の中へ","through":"〜を通して","over":"〜の上を",
+  "and":"そして","but":"しかし","or":"または","so":"だから","because":"なぜなら",
+  "if":"もし〜なら","when":"〜するとき","while":"〜する間","as":"〜として","after":"〜の後",
+  "before":"〜の前に","until":"〜まで","although":"〜だけれども","though":"〜だけれども",
+  "not":"〜でない","no":"いいえ","never":"決して〜ない","only":"〜だけ",
+  "all":"すべての","some":"いくつかの","any":"どんな","many":"多くの","much":"多くの",
+  "more":"もっと","most":"最も","very":"とても","too":"〜すぎる","also":"また","just":"ちょうど",
+  "now":"今","then":"そのとき","here":"ここ","there":"そこ","how":"どのように",
+  "what":"何","which":"どれ","who":"誰","where":"どこ","why":"なぜ","when":"いつ",
+  "go":"行く","goes":"行く","going":"行くこと","went":"行った","gone":"行った",
+  "come":"来る","came":"来た","get":"得る","got":"得た","make":"作る","made":"作った",
+  "take":"取る","took":"取った","give":"与える","gave":"与えた","see":"見える","saw":"見えた",
+  "know":"知っている","knew":"知っていた","think":"思う","thought":"思った",
+  "say":"言う","said":"言った","tell":"伝える","told":"伝えた","ask":"尋ねる",
+  "want":"望む","need":"必要とする","like":"好む","love":"愛する","help":"助ける",
+  "try":"試みる","start":"始める","stop":"止まる","use":"使う","used":"使った",
+  "find":"見つける","found":"見つけた","put":"置く","keep":"保つ","let":"〜させる",
+  "play":"遊ぶ、演奏する","work":"働く","live":"生きる、住む","move":"動く","turn":"回る",
+  "show":"見せる","seem":"〜に見える","become":"〜になる","became":"〜になった",
+  "call":"呼ぶ","called":"呼ばれた","run":"走る","ran":"走った","walk":"歩く",
+  "talk":"話す","speak":"話す","spoke":"話した","read":"読む","write":"書く","wrote":"書いた",
+  "learn":"学ぶ","study":"勉強する","teach":"教える","taught":"教えた",
+  "eat":"食べる","drink":"飲む","sleep":"眠る","buy":"買う","bought":"買った",
+  "sell":"売る","build":"建てる","built":"建てた","grow":"育つ","grew":"育った",
+  "change":"変える","happen":"起こる","create":"作る","support":"支える","include":"含む",
+  "travel":"旅行する","visit":"訪問する","join":"加わる","agree":"同意する","believe":"信じる",
+  "people":"人々","person":"人","man":"男性","woman":"女性","child":"子ども","children":"子どもたち",
+  "family":"家族","friend":"友達","student":"生徒","teacher":"先生","doctor":"医者",
+  "country":"国","city":"都市","town":"町","school":"学校","home":"家","house":"家",
+  "world":"世界","life":"生活、生命","time":"時間","day":"日","year":"年","week":"週",
+  "water":"水","food":"食べ物","money":"お金","place":"場所","way":"方法、道",
+  "thing":"もの","part":"部分","number":"数字","fact":"事実","problem":"問題",
+  "idea":"考え","information":"情報","example":"例","question":"質問","answer":"答え",
+  "language":"言語","word":"単語","story":"物語","book":"本","music":"音楽",
+  "animal":"動物","plant":"植物","tree":"木","flower":"花","earth":"地球",
+  "sun":"太陽","moon":"月","star":"星","sky":"空","sea":"海","river":"川","mountain":"山",
+  "air":"空気","fire":"火","land":"土地","nature":"自然","environment":"環境",
+  "health":"健康","body":"体","heart":"心臓、心","mind":"心、精神","energy":"エネルギー",
+  "power":"力","force":"力","light":"光","color":"色","size":"大きさ","shape":"形",
+  "large":"大きい","small":"小さい","big":"大きい","little":"小さい","long":"長い","short":"短い",
+  "high":"高い","low":"低い","hot":"熱い","cold":"冷たい","new":"新しい","old":"古い",
+  "good":"良い","bad":"悪い","great":"すばらしい","important":"重要な","different":"異なった",
+  "same":"同じ","other":"他の","next":"次の","last":"最後の","first":"最初の",
+  "young":"若い","old":"年取った","hard":"難しい、硬い","easy":"簡単な","fast":"速い","slow":"遅い",
+  "early":"早い","late":"遅い","real":"本物の","true":"本当の","free":"自由な、無料の",
+  "able":"〜できる","possible":"可能な","ready":"準備できた","sure":"確かな","clear":"明確な",
+  "solar":"太陽の","system":"仕組み、システム","planet":"惑星","orbit":"軌道","gravity":"重力",
+  "star":"星","gas":"気体、ガス","hydrogen":"水素","helium":"ヘリウム","metal":"金属",
+  "rock":"岩","ice":"氷","ring":"輪","inner":"内側の","outer":"外側の","center":"中心",
+  "mercury":"水星","venus":"金星","mars":"火星","jupiter":"木星","saturn":"土星",
+  "uranus":"天王星","neptune":"海王星","asteroid":"小惑星","comet":"彗星","moon":"月",
+  "eight":"8","million":"百万","dozen":"十数個","billion":"十億","thousand":"千",
+  "famous":"有名な","beautiful":"美しい","giant":"巨大な","mostly":"ほとんど",
+  "closest":"最も近い","beyond":"〜を超えて","known":"知られた","includes":"含む",
+  "travels":"旅する","holds":"保つ","made":"作られた","called":"呼ばれた","lie":"位置する"
+};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let stats = JSON.parse(localStorage.getItem('bb_stats') || '{"words":0,"sents":0,"paras":0,"wordCounts":{}}');
+let chapterData = JSON.parse(localStorage.getItem('bb_chapters') || '[]');
+
+// Speech
+let speakingWordEl = null;
+let speakingSentEl = null;
+let speakingParaEl = null;
+let queue = [];
+let queueIdx = 0;
+const btnStop = document.getElementById('btnStop');
+const speedSelect = document.getElementById('speedSelect');
+const tooltip = document.getElementById('tooltip');
+
+// iOS unlock
+let unlocked = false;
+['touchstart','click'].forEach(e => document.addEventListener(e, () => {
+  if (unlocked) return; unlocked = true;
+  const u = new SpeechSynthesisUtterance(''); speechSynthesis.speak(u);
+}, { once: true }));
+
+function getVoice() {
+  const vv = speechSynthesis.getVoices();
+  return vv.find(v => v.lang==='en-US' && v.name.includes('Samantha'))
+      || vv.find(v => v.lang==='en-US')
+      || vv.find(v => v.lang.startsWith('en'))
+      || null;
+}
+
+// iOS keepalive
+let keepaliveTimer = null;
+function startKeepalive() {
+  stopKeepalive();
+  keepaliveTimer = setInterval(() => {
+    if (!speechSynthesis.speaking) { stopKeepalive(); return; }
+    speechSynthesis.pause(); speechSynthesis.resume();
+  }, 10000);
+}
+function stopKeepalive() {
+  if (keepaliveTimer) { clearInterval(keepaliveTimer); keepaliveTimer = null; }
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.speaking-word').forEach(e => e.classList.remove('speaking-word'));
+  document.querySelectorAll('.speaking-sent').forEach(e => e.classList.remove('speaking-sent'));
+  document.querySelectorAll('.speaking-sent-text').forEach(e => e.classList.remove('speaking-sent-text'));
+  document.querySelectorAll('.speaking-para').forEach(e => e.classList.remove('speaking-para'));
+  speakingWordEl = speakingSentEl = speakingParaEl = null;
+}
+
+function stopAll() {
+  speechSynthesis.cancel();
+  stopKeepalive();
+  queue = []; queueIdx = 0;
+  clearHighlights();
+  btnStop.classList.remove('on');
+}
+btnStop.addEventListener('click', stopAll);
+
+function doSpeak(text, onEnd, highlightEl, hlClass) {
+  clearHighlights();
+  if (highlightEl) highlightEl.classList.add(hlClass);
+  btnStop.classList.add('on');
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = parseFloat(speedSelect.value);
+  const v = getVoice(); if (v) u.voice = v;
+
+  u.onend = () => {
+    if (highlightEl) highlightEl.classList.remove(hlClass);
+    stopKeepalive();
+    if (queueIdx < queue.length) {
+      const item = queue[queueIdx++];
+      doSpeak(item.text, null, item.el, item.cls);
+    } else {
+      btnStop.classList.remove('on');
+      queue = []; queueIdx = 0;
+    }
+    if (onEnd) onEnd();
+  };
+  u.onerror = () => {
+    if (highlightEl) highlightEl.classList.remove(hlClass);
+    stopKeepalive();
+    btnStop.classList.remove('on');
+  };
+  speechSynthesis.speak(u);
+  startKeepalive();
+}
+
+// ── WORD CLICK ──
+function speakWord(wordEl) {
+  stopAll();
+  const w = wordEl.dataset.word;
+  // track
+  stats.words++;
+  stats.wordCounts[w] = (stats.wordCounts[w] || 0) + 1;
+  saveStats();
+  doSpeak(w, null, wordEl, 'speaking-word');
+}
+
+// ── SENTENCE CLICK ──
+function speakSent(btnEl) {
+  stopAll();
+  const sentSpan = btnEl.closest('.sent');
+  const textSpan = sentSpan.querySelector('.sent-text');
+  const text = textSpan.textContent.trim();
+  stats.sents++;
+  saveStats();
+  // highlight both button and text
+  btnEl.classList.add('speaking-sent');
+  textSpan.classList.add('speaking-sent-text');
+  btnStop.classList.add('on');
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = parseFloat(speedSelect.value);
+  const v = getVoice(); if (v) u.voice = v;
+  u.onend = () => {
+    btnEl.classList.remove('speaking-sent');
+    textSpan.classList.remove('speaking-sent-text');
+    stopKeepalive();
+    btnStop.classList.remove('on');
+  };
+  u.onerror = () => {
+    btnEl.classList.remove('speaking-sent');
+    textSpan.classList.remove('speaking-sent-text');
+    stopKeepalive(); btnStop.classList.remove('on');
+  };
+  speechSynthesis.speak(u);
+  startKeepalive();
+}
+
+// ── PARAGRAPH ──
+function readPara(paraEl) {
+  stopAll();
+  const text = Array.from(paraEl.querySelectorAll('.sent-text')).map(s => s.textContent).join(' ');
+  stats.paras++;
+  const cur = parseInt(paraEl.dataset.reads || '0') + 1;
+  paraEl.dataset.reads = Math.min(cur, 5);
+  saveStats();
+  doSpeak(text, null, paraEl, 'speaking-para');
+}
+
+// ── READ ALL CHAPTER ──
+function readAllChapter(chId) {
+  stopAll();
+  const ch = document.getElementById(chId);
+  if (!ch.classList.contains('open')) ch.classList.add('open');
+  const paras = Array.from(ch.querySelectorAll('.para-block'));
+  if (!paras.length) return;
+  paras.forEach(p => {
+    stats.paras++;
+    const cur = parseInt(p.dataset.reads || '0') + 1;
+    p.dataset.reads = Math.min(cur, 5);
+  });
+  saveStats();
+  const items = paras.map(p => ({
+    text: Array.from(p.querySelectorAll('.sent-text')).map(s => s.textContent).join(' '),
+    el: p,
+    cls: 'speaking-para'
+  }));
+  queue = items.slice(1); queueIdx = 0;
+  doSpeak(items[0].text, null, items[0].el, 'speaking-para');
+}
+
+// ── TOOLTIP ──
+function showTooltip(wordEl, e) {
+  const w = wordEl.dataset.word.toLowerCase().replace(/[^a-z']/g,'');
+  const mean = DICT[w] || DICT[w.replace(/s$/,'')] || DICT[w.replace(/ed$/,'')] || DICT[w.replace(/ing$/,'')] || null;
+  if (!mean) { tooltip.style.display = 'none'; return; }
+  document.getElementById('ttWord').textContent = wordEl.dataset.word;
+  document.getElementById('ttMean').textContent = mean;
+  const cnt = stats.wordCounts[wordEl.dataset.word] || 0;
+  document.getElementById('ttCount').textContent = cnt ? `読んだ回数: ${cnt}回` : '';
+  tooltip.style.display = 'block';
+  positionTooltip(e);
+}
+function positionTooltip(e) {
+  const x = (e.clientX || (e.touches && e.touches[0].clientX) || 0);
+  const y = (e.clientY || (e.touches && e.touches[0].clientY) || 0);
+  const tw = tooltip.offsetWidth || 180;
+  const left = Math.min(x + 10, window.innerWidth - tw - 10);
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = (y - 52) + 'px';
+}
+document.addEventListener('mousemove', e => {
+  if (tooltip.style.display === 'block') positionTooltip(e);
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.word') && !e.target.closest('.sent-play')) {
+    tooltip.style.display = 'none';
+  }
+});
+
+// ── STATS ──
+function saveStats() {
+  localStorage.setItem('bb_stats', JSON.stringify(stats));
+  refreshStatsUI();
+}
+function refreshStatsUI() {
+  document.getElementById('statWords').textContent = stats.words;
+  document.getElementById('statSents').textContent = stats.sents;
+  document.getElementById('statParas').textContent = stats.paras;
+  // top words
+  const list = document.getElementById('topWordsList');
+  const sorted = Object.entries(stats.wordCounts).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  if (!sorted.length) {
+    list.innerHTML = '<span style="color:var(--ink3);font-size:0.8rem">Tap words to start building your list!</span>';
+    return;
+  }
+  list.innerHTML = sorted.map(([w,c]) =>
+    `<div class="top-word-chip">${escHtml(w)}<span class="twc-count">${c}</span></div>`
+  ).join('');
+}
+function clearStats() {
+  if (!confirm('Reset all stats?')) return;
+  stats = { words:0, sents:0, paras:0, wordCounts:{} };
+  document.querySelectorAll('.para-block').forEach(p => p.dataset.reads = '0');
+  saveStats();
+}
+
+// ── TABS ──
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const idx = ['read','stats','add'].indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'stats') refreshStatsUI();
+}
+
+// ── TOGGLE CHAPTER ──
+function toggleChapter(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── TEXT → HTML (parse sentences and words) ──
+function parseParagraph(text, jaText) {
+  // Split into sentences
+  const sentences = text.match(/[^.!?]+[.!?]+[\s]*/g) || [text];
+  const sentHtml = sentences.map(sent => {
+    const trimmed = sent.trim();
+    if (!trimmed) return '';
+    const tokens = trimmed.split(/(\s+)/);
+    const wordHtml = tokens.map(tok => {
+      if (/^\s+$/.test(tok)) return ' ';
+      const clean = tok.replace(/[^a-zA-Z']/g,'');
+      if (!clean) return escHtml(tok);
+      return `<span class="word" data-word="${escHtml(tok)}" onclick="speakWord(this)" onmouseenter="showTooltip(this,event)" ontouchstart="showTooltip(this,event)">${escHtml(tok)}</span>`;
+    }).join('');
+    return `<span class="sent"><button class="sent-play" onclick="speakSent(this)" title="Read sentence">●</button><span class="sent-text">${wordHtml}</span> </span>`;
+  }).join('');
+
+  const jaHtml = jaText ? `
+    <div>
+      <button class="ja-toggle" onclick="toggleJa(this)">🇯🇵 訳を見る</button>
+      <div class="ja-body">${escHtml(jaText)}</div>
+    </div>` : '';
+
+  return sentHtml + jaHtml;
+}
+
+// ── TOGGLE JAPANESE ──
+function toggleJa(btn) {
+  btn.classList.toggle('open');
+  btn.textContent = btn.classList.contains('open') ? '🇯🇵 訳を隠す' : '🇯🇵 訳を見る';
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+// ── ADD CHAPTER ──
+let chCount = 1;
+function addChapter() {
+  const titleEl = document.getElementById('newTitle');
+  const textEl = document.getElementById('newText');
+  const jaEl = document.getElementById('newJa');
+  const title = titleEl.value.trim() || `Chapter ${++chCount}`;
+  const raw = textEl.value.trim();
+  const rawJa = jaEl.value.trim();
+  const statusEl = document.getElementById('addStatus');
+
+  if (!raw) { statusEl.textContent = '⚠️ Please paste some text first.'; return; }
+
+  const paras = raw.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
+  const jaParas = rawJa ? rawJa.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean) : [];
+  const id = 'ch-' + Date.now();
+  const parts = title.split(':');
+  const badge = parts[0].trim();
+  const rest = parts.slice(1).join(':').trim() || title;
+
+  const div = document.createElement('div');
+  div.className = 'chapter open';
+  div.id = id;
+
+  const parasHtml = paras.map((p, i) => {
+    const paraId = 'p-' + Math.random().toString(36).slice(2);
+    const ja = jaParas[i] || '';
+    return `<div class="para-block" id="${paraId}" data-reads="0">
+      <button class="para-play" onclick="readPara(this.parentElement)" title="Read paragraph">▶</button>
+      ${parseParagraph(p, ja)}
+    </div>`;
+  }).join('');
+
+  div.innerHTML = `
+    <div class="chapter-head" onclick="toggleChapter('${id}')">
+      <span class="ch-badge">${escHtml(badge)}</span>
+      <span class="ch-title">${escHtml(rest)}</span>
+      <span class="ch-arrow">▼</span>
+    </div>
+    <div class="chapter-body">
+      <button class="btn-read-all" onclick="readAllChapter('${id}')">▶ Read Whole Chapter</button>
+      ${parasHtml}
+    </div>`;
+
+  document.getElementById('tab-read').appendChild(div);
+
+  // save to localStorage
+  chapterData.push({ id, title, paras, jaParas });
+  localStorage.setItem('bb_chapters', JSON.stringify(chapterData));
+
+  titleEl.value = ''; textEl.value = ''; jaEl.value = '';
+  statusEl.textContent = `✅ "${title}" added — ${paras.length} paragraph(s)`;
+  switchTab('read');
+  buildToc();
+  setTimeout(() => div.scrollIntoView({ behavior:'smooth', block:'start' }), 200);
+}
+
+// ── RESTORE saved chapters ──
+function restoreChapters() {
+  chapterData.forEach(({ id, title, paras, jaParas }) => {
+    if (document.getElementById(id)) return;
+    const parts = title.split(':');
+    const badge = parts[0].trim();
+    const rest = parts.slice(1).join(':').trim() || title;
+    const jaArr = jaParas || [];
+    const div = document.createElement('div');
+    div.className = 'chapter open';
+    div.id = id;
+    const parasHtml = paras.map((p, i) => `<div class="para-block" data-reads="0">
+      <button class="para-play" onclick="readPara(this.parentElement)" title="Read paragraph">▶</button>
+      ${parseParagraph(p, jaArr[i] || '')}
+    </div>`).join('');
+    div.innerHTML = `
+      <div class="chapter-head" onclick="toggleChapter('${id}')">
+        <span class="ch-badge">${escHtml(badge)}</span>
+        <span class="ch-title">${escHtml(rest)}</span>
+        <span class="ch-arrow">▼</span>
+      </div>
+      <div class="chapter-body">
+        <button class="btn-read-all" onclick="readAllChapter('${id}')">▶ Read Whole Chapter</button>
+        ${parasHtml}
+      </div>`;
+    document.getElementById('tab-read').appendChild(div);
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── TABLE OF CONTENTS ──
+function buildToc() {
+  const chapters = document.querySelectorAll('#tab-read .chapter');
+  const tocList = document.getElementById('tocList');
+  const mobileList = document.getElementById('tocMobileList');
+  tocList.innerHTML = '';
+  mobileList.innerHTML = '';
+
+  chapters.forEach(ch => {
+    const badge = ch.querySelector('.ch-badge')?.textContent || '';
+    const title = ch.querySelector('.ch-title')?.textContent || '';
+    const id = ch.id;
+
+    const item = document.createElement('div');
+    item.className = 'toc-item';
+    item.dataset.chId = id;
+    item.innerHTML = `<span class="toc-badge">${escHtml(badge)}</span>${escHtml(title)}`;
+    item.onclick = () => jumpToChapter(id);
+    tocList.appendChild(item);
+
+    const mItem = item.cloneNode(true);
+    mItem.onclick = () => jumpToChapter(id);
+    mobileList.appendChild(mItem);
+  });
+
+  updateTocActive();
+}
+
+function jumpToChapter(id) {
+  const ch = document.getElementById(id);
+  if (!ch) return;
+  if (!ch.classList.contains('open')) ch.classList.add('open');
+  // close mobile toc
+  document.getElementById('tocMobileList').classList.remove('open');
+  document.getElementById('tocMobileArrow').textContent = '▼';
+  // switch to read tab if needed
+  if (!document.getElementById('tab-read').classList.contains('active')) {
+    switchTab('read');
+  }
+  setTimeout(() => ch.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+function updateTocActive() {
+  const chapters = document.querySelectorAll('#tab-read .chapter');
+  let activeId = null;
+
+  // find topmost visible chapter
+  chapters.forEach(ch => {
+    const rect = ch.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.5 && rect.bottom > 0) {
+      activeId = ch.id;
+    }
+  });
+
+  document.querySelectorAll('.toc-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.chId === activeId);
+  });
+
+  // update mobile label
+  if (activeId) {
+    const activeItem = document.querySelector(`#tocList .toc-item[data-ch-id="${activeId}"]`);
+    if (activeItem) {
+      const badge = activeItem.querySelector('.toc-badge')?.textContent || '';
+      document.getElementById('tocMobileLabel').textContent = `📋 ${badge}`;
+    }
+  }
+}
+
+function toggleMobileToc() {
+  const list = document.getElementById('tocMobileList');
+  const arrow = document.getElementById('tocMobileArrow');
+  list.classList.toggle('open');
+  arrow.textContent = list.classList.contains('open') ? '▲' : '▼';
+}
+
+window.addEventListener('scroll', () => {
+  updateTocActive();
+}, { passive: true });
+
+// ── INIT ──
+restoreChapters();
+refreshStatsUI();
+buildToc();
+if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => {};
+
+// Wire up the sample chapter's sent-play buttons (static HTML)
+document.querySelectorAll('#ch-sample .sent-play').forEach(btn => {
+  btn.addEventListener('click', () => speakSent(btn));
+});
+
+// Wrap words in sample chapter
+document.querySelectorAll('#ch-sample .sent-text').forEach(sentTextEl => {
+  const orig = sentTextEl.textContent;
+  const tokens = orig.split(/(\s+)/);
+  sentTextEl.innerHTML = tokens.map(tok => {
+    if (/^\s+$/.test(tok)) return ' ';
+    const clean = tok.replace(/[^a-zA-Z']/g,'');
+    if (!clean) return escHtml(tok);
+    return `<span class="word" data-word="${escHtml(tok)}" onclick="speakWord(this)" onmouseenter="showTooltip(this,event)" ontouchstart="showTooltip(this,event)">${escHtml(tok)}</span>`;
+  }).join('');
+});
+</script>
+</body>
+</html>
