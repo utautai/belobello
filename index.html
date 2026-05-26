@@ -698,8 +698,16 @@ textarea.field { min-height: 120px; resize: vertical; }
   <div class="logo">belo<span>bello</span></div>
   <div class="header-controls">
     <div class="speed-wrap">
+      <span class="speed-label">Voice</span>
+      <select class="speed-select" id="voiceSelect" style="max-width:110px;">
+        <option value="">Loading...</option>
+      </select>
+    </div>
+    <div class="speed-wrap">
       <span class="speed-label">Speed</span>
       <select class="speed-select" id="speedSelect">
+        <option value="0.4">x0.4</option>
+        <option value="0.5">x0.5</option>
         <option value="0.65">Slow</option>
         <option value="0.85" selected>Normal</option>
         <option value="1.05">Fast</option>
@@ -942,11 +950,30 @@ let unlocked = false;
   const u = new SpeechSynthesisUtterance(''); speechSynthesis.speak(u);
 }, { once: true }));
 
+function populateVoiceSelect() {
+  const voices = speechSynthesis.getVoices();
+  const enVoices = voices.filter(v => v.lang.startsWith('en'));
+  if (!enVoices.length) return;
+  const sel = document.getElementById('voiceSelect');
+  const saved = localStorage.getItem('bb_voice');
+  sel.innerHTML = enVoices.map(v =>
+    `<option value="${v.name}" ${v.name === saved ? 'selected' : ''}>${v.name.replace(/^com\.apple\.voice\./, '').replace(/^com\.apple\.ttsbundle\./, '')}</option>`
+  ).join('');
+  sel.onchange = () => localStorage.setItem('bb_voice', sel.value);
+}
+
 function getVoice() {
-  const vv = speechSynthesis.getVoices();
-  return vv.find(v => v.lang==='en-US' && v.name.includes('Samantha'))
-      || vv.find(v => v.lang==='en-US')
-      || vv.find(v => v.lang.startsWith('en'))
+  const saved = localStorage.getItem('bb_voice');
+  const voices = speechSynthesis.getVoices();
+  if (saved) {
+    const found = voices.find(v => v.name === saved);
+    if (found) return found;
+  }
+  // fallback: prefer Siri, then any en-US
+  return voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('siri'))
+      || voices.find(v => v.lang === 'en-US' && v.name.includes('Samantha'))
+      || voices.find(v => v.lang === 'en-US')
+      || voices.find(v => v.lang.startsWith('en'))
       || null;
 }
 
@@ -1469,7 +1496,10 @@ window.addEventListener('scroll', () => {
   await restoreChapters();
   refreshStatsUI();
   buildToc();
-  if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => {};
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = () => populateVoiceSelect();
+  }
+  populateVoiceSelect();
 
   // Wire up the sample chapter's sent-play buttons (static HTML)
   document.querySelectorAll('#ch-sample .sent-play').forEach(btn => {
