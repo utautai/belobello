@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Belobello">
+<meta name="theme-color" content="#1e1a14">
 <title>Belobello</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -813,6 +817,21 @@ textarea.field { min-height: 120px; resize: vertical; }
       <div id="addStatus"></div>
     </div>
   </div>
+
+  <div class="add-section">
+    <div class="add-head" style="background:#5a4a8a;">💾 Import / Export</div>
+    <div class="add-body">
+      <p style="font-size:0.8rem;color:var(--ink2);margin-bottom:12px;line-height:1.6;">データをJSONファイルで保存・読み込みできます。バックアップや別デバイスへの移行に使えます。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-add" style="background:#5a4a8a;" onclick="exportData()">⬇️ Export JSON</button>
+        <label class="btn-add" style="background:#3a6a8a;cursor:pointer;">
+          ⬆️ Import JSON
+          <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
+        </label>
+      </div>
+      <div id="importStatus" style="font-size:0.75rem;color:var(--ink2);margin-top:8px;font-weight:600;min-height:16px;"></div>
+    </div>
+  </div>
 </div>
 
 </main>
@@ -1172,9 +1191,15 @@ function toggleJa(btn) {
   btn.nextElementSibling.classList.toggle('open');
 }
 
+// ── CONTENT HASH (for idempotent chapter ids) ──
+async function hashId(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return 'ch-' + Array.from(new Uint8Array(buf)).slice(0, 8).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 // ── ADD CHAPTER ──
 let chCount = 1;
-function addChapter() {
+async function addChapter() {
   const titleEl = document.getElementById('newTitle');
   const textEl = document.getElementById('newText');
   const jaEl = document.getElementById('newJa');
@@ -1187,7 +1212,7 @@ function addChapter() {
 
   const paras = raw.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
   const jaParas = rawJa ? rawJa.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean) : [];
-  const id = 'ch-' + Date.now();
+  const id = await hashId(title + '|' + paras[0]);
   const parts = title.split(':');
   const badge = parts[0].trim();
   const rest = parts.slice(1).join(':').trim() || title;
@@ -1230,32 +1255,39 @@ function addChapter() {
 }
 
 // ── RESTORE saved chapters ──
-function restoreChapters() {
-  chapterData.forEach(({ id, title, paras, jaParas }) => {
-    if (document.getElementById(id)) return;
-    const parts = title.split(':');
+async function restoreChapters() {
+  for (const ch of chapterData) {
+    const correctId = await hashId(ch.title + '|' + (ch.paras[0] || ''));
+    if (ch.id !== correctId) {
+      const oldEl = document.getElementById(ch.id);
+      if (oldEl) oldEl.remove();
+      ch.id = correctId;
+    }
+    if (document.getElementById(ch.id)) continue;
+    const parts = ch.title.split(':');
     const badge = parts[0].trim();
-    const rest = parts.slice(1).join(':').trim() || title;
-    const jaArr = jaParas || [];
+    const rest = parts.slice(1).join(':').trim() || ch.title;
+    const jaArr = ch.jaParas || [];
     const div = document.createElement('div');
     div.className = 'chapter open';
-    div.id = id;
-    const parasHtml = paras.map((p, i) => `<div class="para-block" data-reads="0">
+    div.id = ch.id;
+    const parasHtml = ch.paras.map((p, i) => `<div class="para-block" data-reads="0">
       <button class="para-play" onclick="readPara(this.parentElement)" title="Read paragraph">▶</button>
       ${parseParagraph(p, jaArr[i] || '')}
     </div>`).join('');
     div.innerHTML = `
-      <div class="chapter-head" onclick="toggleChapter('${id}')">
+      <div class="chapter-head" onclick="toggleChapter('${ch.id}')">
         <span class="ch-badge">${escHtml(badge)}</span>
         <span class="ch-title">${escHtml(rest)}</span>
         <span class="ch-arrow">▼</span>
       </div>
       <div class="chapter-body">
-        <button class="btn-read-all" onclick="readAllChapter('${id}')">▶ Read Whole Chapter</button>
+        <button class="btn-read-all" onclick="readAllChapter('${ch.id}')">▶ Read Whole Chapter</button>
         ${parasHtml}
       </div>`;
     document.getElementById('tab-read').appendChild(div);
-  });
+  }
+  localStorage.setItem('bb_chapters', JSON.stringify(chapterData));
 }
 
 function escHtml(s) {
@@ -1337,32 +1369,125 @@ function toggleMobileToc() {
   arrow.textContent = list.classList.contains('open') ? '▲' : '▼';
 }
 
+// ── EXPORT ──
+function exportData() {
+  const payload = {
+    version: 1,
+    exported: new Date().toISOString(),
+    chapters: chapterData,
+    stats: stats
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `belobello-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── IMPORT ──
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('importStatus');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.chapters || !Array.isArray(payload.chapters)) throw new Error('Invalid format');
+
+      // merge or replace?
+      const merge = chapterData.length > 0 && confirm('既存のチャプターに追加しますか？\nOK = 追加、キャンセル = 置き換え');
+
+      if (!merge) {
+        // clear existing dynamic chapters
+        chapterData = [];
+        document.querySelectorAll('#tab-read .chapter:not(#ch-sample)').forEach(el => el.remove());
+      }
+
+      // import chapters (hash-based dedup)
+      for (const ch of payload.chapters) {
+        const correctId = await hashId(ch.title + '|' + (ch.paras[0] || ''));
+        ch.id = correctId;
+        if (chapterData.some(existing => existing.id === correctId)) continue;
+        chapterData.push(ch);
+      }
+      localStorage.setItem('bb_chapters', JSON.stringify(chapterData));
+
+      // import stats if replacing
+      if (!merge && payload.stats) {
+        stats = payload.stats;
+        localStorage.setItem('bb_stats', JSON.stringify(stats));
+      }
+
+      // re-render
+      document.querySelectorAll('#tab-read .chapter:not(#ch-sample)').forEach(el => el.remove());
+      restoreChapters();
+      buildToc();
+      refreshStatsUI();
+
+      statusEl.textContent = `✅ ${payload.chapters.length}チャプターを読み込みました`;
+    } catch(err) {
+      statusEl.textContent = '⚠️ 読み込み失敗：正しいBelobello JSONファイルか確認してください';
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset input
+}
+
+// ── PWA: SERVICE WORKER (inline) ──
+if ('serviceWorker' in navigator) {
+  const swCode = `
+const CACHE = 'belobello-v1';
+const ASSETS = [location.href];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }))
+  );
+});
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+
+
 window.addEventListener('scroll', () => {
   updateTocActive();
 }, { passive: true });
 
 // ── INIT ──
-restoreChapters();
-refreshStatsUI();
-buildToc();
-if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => {};
+(async () => {
+  await restoreChapters();
+  refreshStatsUI();
+  buildToc();
+  if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => {};
 
-// Wire up the sample chapter's sent-play buttons (static HTML)
-document.querySelectorAll('#ch-sample .sent-play').forEach(btn => {
-  btn.addEventListener('click', () => speakSent(btn));
-});
+  // Wire up the sample chapter's sent-play buttons (static HTML)
+  document.querySelectorAll('#ch-sample .sent-play').forEach(btn => {
+    btn.addEventListener('click', () => speakSent(btn));
+  });
 
-// Wrap words in sample chapter
-document.querySelectorAll('#ch-sample .sent-text').forEach(sentTextEl => {
-  const orig = sentTextEl.textContent;
-  const tokens = orig.split(/(\s+)/);
-  sentTextEl.innerHTML = tokens.map(tok => {
-    if (/^\s+$/.test(tok)) return ' ';
-    const clean = tok.replace(/[^a-zA-Z']/g,'');
-    if (!clean) return escHtml(tok);
-    return `<span class="word" data-word="${escHtml(tok)}" onclick="speakWord(this)" onmouseenter="showTooltip(this,event)" ontouchstart="showTooltip(this,event)">${escHtml(tok)}</span>`;
-  }).join('');
-});
+  // Wrap words in sample chapter
+  document.querySelectorAll('#ch-sample .sent-text').forEach(sentTextEl => {
+    const orig = sentTextEl.textContent;
+    const tokens = orig.split(/(\s+)/);
+    sentTextEl.innerHTML = tokens.map(tok => {
+      if (/^\s+$/.test(tok)) return ' ';
+      const clean = tok.replace(/[^a-zA-Z']/g,'');
+      if (!clean) return escHtml(tok);
+      return `<span class="word" data-word="${escHtml(tok)}" onclick="speakWord(this)" onmouseenter="showTooltip(this,event)" ontouchstart="showTooltip(this,event)">${escHtml(tok)}</span>`;
+    }).join('');
+  });
+})();
 </script>
 </body>
 </html>
